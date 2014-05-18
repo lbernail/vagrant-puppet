@@ -1,6 +1,6 @@
 ## Vagrant environement for puppet
 
-Configure a puppet development environments with the following components
+Configure a puppet development/demo environment with the following components:
 - puppetmaster vm with puppetdb and puppetboard
 - additional nodes to test agents
 
@@ -11,9 +11,9 @@ Configure a puppet development environments with the following components
 ```
 git clone https://github.com/lbernail/vagrant-puppet.git
 ```
-* Go into puppet env, create puppet master and configure it (default box: precise64 from hashicorp on vagrantcloud.com) 
+* Go into puppet env, create puppet master and configure it (default box: hashicorp/precise64)
 ```
-cd vagrant-puppet;
+cd vagrant-puppet
 vagrant up puppetmaster
 ```  
 *Details about virtual machines are in the Vagrantfile (private network for puppet, port redirection for puppetboard, hosts file)*
