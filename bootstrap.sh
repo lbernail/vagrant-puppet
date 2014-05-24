@@ -1,7 +1,6 @@
 echo "Bootstrapping"
 
 release=`grep DISTRIB_CODENAME /etc/lsb-release | cut -d "=" -f 2`
-version="3.6.0-1puppetlabs1"
 
 echo "Modifying apt sources to rely on AWS Europe"
 cat > /etc/apt/sources.list <<EOF
@@ -17,8 +16,7 @@ dpkg -i /tmp/puppetlabs.deb > /dev/null
 echo "Updading apt cache"
 apt-get update > /dev/null
 echo "Installing puppet, rubygems and git"
-apt-get install -y puppet-common=$version puppet=$version > /dev/null 2>&1
-apt-get install -y rubygems git > /dev/null 2>&1
+apt-get install -y puppet rubygems git > /dev/null 2>&1
 
 echo "Creating hiera.yaml"
 cat > /etc/puppet/hiera.yaml <<EOF

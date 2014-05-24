@@ -8,7 +8,9 @@ SUBNET="192.168.128"
 DOMAIN="vm.local"
 
 MASTERNAME="puppetmaster"
+DOCKERS="dockers"
 MASTERIP="#{SUBNET}.2"
+DOCKERSIP="#{SUBNET}.3"
 AGENTS=["dbsrv","websrv"]
 
 
@@ -17,8 +19,6 @@ $hostfiledata="127.0.0.1 localhost\n#{MASTERIP} #{MASTERNAME}.#{DOMAIN} #{MASTER
 AGENTS.each_with_index do |agent,index|
   $hostfiledata=$hostfiledata+"\n#{SUBNET}.#{index+10} #{agent}.#{DOMAIN} #{agent}"
 end
-
-$bootstrap=File.read("bootstrap.sh")
 
 $set_host_file="cat <<EOF > /etc/hosts\n"+$hostfiledata+"\nEOF\n"
 
@@ -31,12 +31,12 @@ Vagrant.configure VAGRANTFILE_API_VERSION do |config|
   config.ssh.shell = "bash -c 'BASH_ENV=/etc/profile exec bash'"
 
   config.vm.define :puppetmaster do |pm|
-     pm.vm.box = "hashicorp/precise64"
-     pm.vm.hostname = "#{MASTERNAME}.#{DOMAIN}"
-     pm.vm.network :private_network, ip: "#{MASTERIP}" 
-     pm.vm.network :forwarded_port, guest: 5000, host: 5000
-     pm.vm.provision :shell, :inline => $set_host_file
-     pm.vm.provision :shell, :inline => $bootstrap
+    pm.vm.box = "hashicorp/precise64"
+    pm.vm.hostname = "#{MASTERNAME}.#{DOMAIN}"
+    pm.vm.network :private_network, ip: "#{MASTERIP}" 
+    pm.vm.network :forwarded_port, guest: 5000, host: 5000
+    pm.vm.provision :shell, :inline => $set_host_file
+    pm.vm.provision :shell, :path => "bootstrap.sh"
   end
 
   AGENTS.each_with_index do |agent,index|
@@ -47,4 +47,19 @@ Vagrant.configure VAGRANTFILE_API_VERSION do |config|
         ag.vm.provision :shell, :inline => $set_host_file
     end
   end  
+
+  config.vm.define :dockers do |d|
+
+    d.vm.box = "mitchellh/boot2docker"
+
+    d.vm.network :private_network, ip: "#{DOCKERSIP}"
+    d.vm.network :forwarded_port, guest: 4001, host: 4001
+    d.vm.network :forwarded_port, guest: 7001, host: 7001
+
+#d.vm.provision :file, source:"etcd/Dockerfile", destination:"/home/docker/etcd/Dockerfile"
+#    d.vm.provision :shell, :inline => "docker build -t etcd /home/docker/etcd"
+#    d.vm.provision :shell, :inline => "docker run -d -p 4001:4001 -p 7001:7001 --name etcd etcd"
+    d.vm.provision :shell, :inline => "docker pull coreos/etcd"
+    d.vm.provision :shell, :inline => "docker run -d -p 4001:4001 -p 7001:7001 --name etcd coreos/etcd"
+  end
 end
