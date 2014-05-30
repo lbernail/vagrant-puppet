@@ -50,6 +50,7 @@ Vagrant.configure VAGRANTFILE_API_VERSION do |config|
         ag.vm.hostname = "#{agent}.#{DOMAIN}"
         ag.vm.network :private_network, ip: "#{SUBNET}.#{index+10}"
         ag.vm.provision :shell, :inline => $set_host_file
+        ag.vm.provision :shell, :path => "install_agent.sh"
     end
   end  
 
