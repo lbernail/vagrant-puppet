@@ -77,5 +77,7 @@ echo "ETCD client configuration"
 
 
 echo "Performing first puppet run"
-puppet apply /etc/puppet/environments/$env/manifests/site.pp --modulepath=/etc/puppet/environments/$env/modules:/etc/puppet/environments/production/site-modules --environment=$env
+# And remove default puppet.conf which raises warnings
+rm /etc/puppet/puppet.conf
+puppet apply /etc/puppet/environments/$env/manifests --modulepath=/etc/puppet/environments/$env/modules:/etc/puppet/environments/production/site-modules --environment=$env
 
