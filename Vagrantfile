@@ -28,6 +28,10 @@ Vagrant.configure VAGRANTFILE_API_VERSION do |config|
     v.memory = 1024
     v.cpus = 2
   end
+  
+  if Vagrant.has_plugin?("vagrant-cachier")
+    config.cache.scope = :box
+  end
 
   config.ssh.shell = "bash -c 'BASH_ENV=/etc/profile exec bash'"
 
@@ -38,7 +42,6 @@ Vagrant.configure VAGRANTFILE_API_VERSION do |config|
     pm.vm.network :forwarded_port, guest: 5000, host: 5000
     pm.vm.provision :shell, :inline => $set_host_file
     pm.vm.provision :shell, :path => "bootstrap.sh"
-    pm.vm.provision :shell, :path => "gpg.sh"
   end
 
   AGENTS.each_with_index do |agent,index|

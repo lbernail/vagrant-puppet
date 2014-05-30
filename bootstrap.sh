@@ -19,9 +19,17 @@ apt-get update > /dev/null
 echo "Installing puppet, rubygems and git"
 apt-get install -y puppet rubygems git > /dev/null 2>&1
 
-
+## GPG configuration
 echo "Installing hiera-gpg"
-gem install hiera-gpg --no-ri --no-rdoc
+gem install hiera-gpg --no-ri --no-rdoc > /dev/null
+echo "Copying keyrings to root dir (for puppet apply) and to /var/lib/puppet (for puppet agents)"
+rm -rf /root/.gnupg
+cp -r /vagrant/gpg /root/.gnupg
+rm -rf /var/lib/puppet/.gnupg
+mkdir -p /var/lib/puppet/
+cp -r /vagrant/gpg /var/lib/puppet/.gnupg
+chown -R puppet:puppet /var/lib/puppet/.gnupg/
+
 echo "Creating hiera.yaml"
 cat > /etc/puppet/hiera.yaml <<EOF
 ---
@@ -70,3 +78,4 @@ echo "ETCD client configuration"
 
 echo "Performing first puppet run"
 puppet apply /etc/puppet/environments/$env/manifests/site.pp --modulepath=/etc/puppet/environments/$env/modules:/etc/puppet/environments/production/site-modules --environment=$env
+
