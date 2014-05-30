@@ -16,6 +16,7 @@ AGENTS=["dbsrv","websrv"]
 
 #Generate a host file to share
 $hostfiledata="127.0.0.1 localhost\n#{MASTERIP} #{MASTERNAME}.#{DOMAIN} #{MASTERNAME}"
+$hostfiledata=$hostfiledata+"\n#{DOCKERSIP} #{DOCKERS}.#{DOMAIN} #{DOCKERS}"
 AGENTS.each_with_index do |agent,index|
   $hostfiledata=$hostfiledata+"\n#{SUBNET}.#{index+10} #{agent}.#{DOMAIN} #{agent}"
 end
@@ -59,7 +60,8 @@ Vagrant.configure VAGRANTFILE_API_VERSION do |config|
 #d.vm.provision :file, source:"etcd/Dockerfile", destination:"/home/docker/etcd/Dockerfile"
 #    d.vm.provision :shell, :inline => "docker build -t etcd /home/docker/etcd"
 #    d.vm.provision :shell, :inline => "docker run -d -p 4001:4001 -p 7001:7001 --name etcd etcd"
+    d.vm.provision :shell, :inline => "kill `cat /var/run/udhcpc.eth1.pid`"   # Workaround tinycore dhcp issue
     d.vm.provision :shell, :inline => "docker pull coreos/etcd"
-    d.vm.provision :shell, :inline => "docker run -d -p 4001:4001 -p 7001:7001 --name etcd coreos/etcd"
+    d.vm.provision :shell, :inline => "docker run -d -p 4001:4001 -p 7001:7001 --name etcd coreos/etcd -addr #{DOCKERSIP}:4001"
   end
 end
