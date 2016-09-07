@@ -69,4 +69,3 @@ echo "Deploying with r10k"
 echo "Performing first puppet run"
 # And remove default puppet.conf which raises warnings
 /opt/puppetlabs/puppet/bin/puppet apply /etc/puppetlabs/code/environments/$env/manifests --modulepath=/etc/puppetlabs/code/environments/$env/modules:/etc/puppetlabs/code/environments/$env/site --environment=$env
-
