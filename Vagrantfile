@@ -24,10 +24,10 @@ end
 $set_host_file="cat <<EOF > /etc/hosts\n"+$hostfiledata+"\nEOF\n"
 
 Vagrant.configure VAGRANTFILE_API_VERSION do |config|
-  config.vm.provider "virtualbox" do |v|
-    v.memory = 1024
-    v.cpus = 2
-  end
+#  config.vm.provider "virtualbox" do |v|
+#    v.memory = 1024
+#    v.cpus = 2
+#  end
   
 #  if Vagrant.has_plugin?("vagrant-cachier")
 #    config.cache.scope = :box
@@ -46,6 +46,11 @@ Vagrant.configure VAGRANTFILE_API_VERSION do |config|
     pm.vm.network :forwarded_port, guest: 5000, host: 5000
     pm.vm.provision :shell, :inline => $set_host_file
     pm.vm.provision :shell, :path => "bootstrap.sh"
+    
+    pm.vm.provider "virtualbox" do |v|
+      v.memory=2048
+      v.cpus=2
+    end
   end
 
   AGENTS.each_with_index do |agent,index|
@@ -55,6 +60,11 @@ Vagrant.configure VAGRANTFILE_API_VERSION do |config|
         ag.vm.network :private_network, ip: "#{SUBNET}.#{index+10}"
         ag.vm.provision :shell, :inline => $set_host_file
         ag.vm.provision :shell, :path => "install_agent.sh"
+
+        ag.vm.provider "virtualbox" do |v|
+          v.memory=1024
+          v.cpus=1
+        end
     end
   end  
 
