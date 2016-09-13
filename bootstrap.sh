@@ -19,21 +19,20 @@ apt-get update > /dev/null
 echo "Installing puppet-agent and git"
 apt-get install -y puppet-agent git > /dev/null 2>&1
 
-### GPG configuration
-#echo "Installing hiera-gpg"
-#gem install hiera-gpg --no-ri --no-rdoc > /dev/null
-#echo "Copying keyrings to root dir (for puppet apply) and to /var/lib/puppet (for puppet agents)"
-#rm -rf /root/.gnupg
-#cp -r /vagrant/gpg /root/.gnupg
-#rm -rf /var/lib/puppet/.gnupg
-#mkdir -p /var/lib/puppet/
-#cp -r /vagrant/gpg /var/lib/puppet/.gnupg
-#chown -R puppet:puppet /var/lib/puppet/.gnupg/
+### eyaml configuration
+echo "Copying keys /var/lib/puppet/secure"
+mkdir -p /var/lib/puppet/secure
+cp -r /vagrant/keys /var/lib/puppet/secure
+useradd puppet
+chown -R puppet:puppet /var/lib/puppet/secure
+chmod 0500 /var/lib/puppet/secure/keys
+chmod 0400 /var/lib/puppet/secure/keys/*
 
 echo "Creating hiera.yaml"
 cat > /etc/puppetlabs/puppet/hiera.yaml <<EOF
 ---
 :backends:
+  - eyaml
   - yaml
 :logger: console
 :hierarchy:
@@ -42,6 +41,11 @@ cat > /etc/puppetlabs/puppet/hiera.yaml <<EOF
 
 :yaml:
    :datadir: /etc/puppetlabs/code/environments/%{::environment}/hieradata
+:eyaml:
+   :datadir: /etc/puppetlabs/code/environments/%{::environment}/hieradata
+   :extension: 'yaml'
+   :pkcs7_private_key: /var/lib/puppet/secure/keys/private_key.pkcs7.pem
+   :pkcs7_public_key: /var/lib/puppet/secure/keys/public_key.pkcs7.pem
 EOF
 
 echo "Creating r10k.yaml"
@@ -56,12 +60,11 @@ cat > /etc/puppetlabs/r10k/r10k.yaml <<EOF
     basedir: /etc/puppetlabs/code/environments
 EOF
 
+echo "Installing hiera-eyaml gem"
+/opt/puppetlabs/puppet/bin/gem install hiera-eyaml --no-ri --no-rdoc > /dev/null
 
 echo "Installing r10k gem"
-# Also install timer to avoid warning with ruby 1.8
 /opt/puppetlabs/puppet/bin/gem install r10k --no-ri --no-rdoc > /dev/null
-#gem install r10k --no-ri --no-rdoc > /dev/null
-#gem install system_timer --no-ri --no-rdoc > /dev/null
 echo "Deploying with r10k"
 /opt/puppetlabs/puppet/bin/r10k deploy environment -v -p
 
