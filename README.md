@@ -80,7 +80,7 @@ sudo /opt/puppetlabs/puppet/bin/puppet agent -t --server puppetmaster.vm.local
 This should fail because the certifcate is not signed
 4. Sign certificate on *master*
 ```
-sudo puppet cert sign websrv.vm.local
+sudo /opt/puppetlabs/puppet/bin/puppet cert sign websrv.vm.local
 ```
 5. ReRun puppet on websrv
 ```
