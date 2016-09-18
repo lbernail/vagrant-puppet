@@ -8,15 +8,21 @@ SUBNET="192.168.128"
 DOMAIN="vm.local"
 
 MASTERNAME="puppetmaster"
-DOCKERS="dockers"
 MASTERIP="#{SUBNET}.2"
-DOCKERSIP="#{SUBNET}.3"
-AGENTS=["dbsrv","websrv"]
+
+DBNAME="puppetdb"
+DBIP="#{SUBNET}.3"
+
+REPORTSNAME="puppetreports"
+REPORTSIP="#{SUBNET}.4"
+
+AGENTS=["websrv"]
 
 
 #Generate a host file to share
 $hostfiledata="127.0.0.1 localhost\n#{MASTERIP} #{MASTERNAME}.#{DOMAIN} #{MASTERNAME}"
-$hostfiledata=$hostfiledata+"\n#{DOCKERSIP} #{DOCKERS}.#{DOMAIN} #{DOCKERS}"
+$hostfiledata=$hostfiledata+"\n#{DBIP} #{DBNAME}.#{DOMAIN} #{DBNAME}"
+$hostfiledata=$hostfiledata+"\n#{REPORTSIP} #{REPORTSNAME}.#{DOMAIN} #{REPORTSNAME}"
 AGENTS.each_with_index do |agent,index|
   $hostfiledata=$hostfiledata+"\n#{SUBNET}.#{index+10} #{agent}.#{DOMAIN} #{agent}"
 end
@@ -24,10 +30,10 @@ end
 $set_host_file="cat <<EOF > /etc/hosts\n"+$hostfiledata+"\nEOF\n"
 
 Vagrant.configure VAGRANTFILE_API_VERSION do |config|
-#  config.vm.provider "virtualbox" do |v|
-#    v.memory = 1024
-#    v.cpus = 2
-#  end
+  config.vm.provider "virtualbox" do |v|
+    v.memory = 1024
+    v.cpus = 1
+  end
   
 #  if Vagrant.has_plugin?("vagrant-cachier")
 #    config.cache.scope = :box
@@ -47,10 +53,27 @@ Vagrant.configure VAGRANTFILE_API_VERSION do |config|
     pm.vm.provision :shell, :inline => $set_host_file
     pm.vm.provision :shell, :path => "bootstrap.sh"
     
-    pm.vm.provider "virtualbox" do |v|
-      v.memory=2048
-      v.cpus=2
-    end
+#    pm.vm.provider "virtualbox" do |v|
+#      v.memory=2048
+#      v.cpus=2
+#    end
+  end
+
+  config.vm.define :puppetdb do |pm|
+    pm.vm.box = "boxcutter/ubuntu1604"
+    pm.vm.hostname = "#{DBNAME}.#{DOMAIN}"
+    pm.vm.network :private_network, ip: "#{DBIP}" 
+    pm.vm.provision :shell, :inline => $set_host_file
+    pm.vm.provision :shell, :path => "install_agent.sh"
+  end
+
+  config.vm.define :puppetreports do |pm|
+    pm.vm.box = "boxcutter/ubuntu1604"
+    pm.vm.hostname = "#{REPORTSNAME}.#{DOMAIN}"
+    pm.vm.network :private_network, ip: "#{REPORTSIP}" 
+    pm.vm.network :forwarded_port, guest: 5000, host: 5001
+    pm.vm.provision :shell, :inline => $set_host_file
+    pm.vm.provision :shell, :path => "install_agent.sh"
   end
 
   AGENTS.each_with_index do |agent,index|
@@ -60,27 +83,7 @@ Vagrant.configure VAGRANTFILE_API_VERSION do |config|
         ag.vm.network :private_network, ip: "#{SUBNET}.#{index+10}"
         ag.vm.provision :shell, :inline => $set_host_file
         ag.vm.provision :shell, :path => "install_agent.sh"
-
-        ag.vm.provider "virtualbox" do |v|
-          v.memory=1024
-          v.cpus=1
-        end
     end
   end  
 
-  config.vm.define :dockers do |d|
-
-    d.vm.box = "mitchellh/boot2docker"
-
-    d.vm.network :private_network, ip: "#{DOCKERSIP}"
-    d.vm.network :forwarded_port, guest: 4001, host: 4001
-    d.vm.network :forwarded_port, guest: 7001, host: 7001
-
-#d.vm.provision :file, source:"etcd/Dockerfile", destination:"/home/docker/etcd/Dockerfile"
-#    d.vm.provision :shell, :inline => "docker build -t etcd /home/docker/etcd"
-#    d.vm.provision :shell, :inline => "docker run -d -p 4001:4001 -p 7001:7001 --name etcd etcd"
-    d.vm.provision :shell, :inline => "kill `cat /var/run/udhcpc.eth1.pid`"   # Workaround tinycore dhcp issue
-    d.vm.provision :shell, :inline => "docker pull coreos/etcd"
-    d.vm.provision :shell, :inline => "docker run -d -p 4001:4001 -p 7001:7001 --name etcd coreos/etcd -addr #{DOCKERSIP}:4001"
-  end
 end
