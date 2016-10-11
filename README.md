@@ -117,3 +117,14 @@ vagrant snapshot take puppetmaster freshinstall
 vagrant snapshot go puppetmaster freshinstall
 ```
 You can find more information here: https://github.com/dergachev/vagrant-vbox-snapshot
+
+
+### Alternative separate install for centos7 support
+
+just add the env var `VAGRANT_VAGRANTFILE=Vagrantfile.centos` before you run commands, it will use the `Vagrantfile.centos` Vagrantfile, `boostrap_centos.sh`, `install_agent_centos.sh` bootstrap files.
+
+```
+VAGRANT_VAGRANTFILE=Vagrantfile.centos vagrant up puppetmaster
+VAGRANT_VAGRANTFILE=Vagrantfile.centos vagrant up puppetdb
+VAGRANT_VAGRANTFILE=Vagrantfile.centos vagrant up puppetreports
+```
